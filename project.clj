@@ -14,6 +14,8 @@
                  [less-awful-ssl "1.0.4"]]
   :main ^:skip-aot kubernetes-api.core
   :resource-paths ["resources"]
+  :java-cmd "/usr/lib/jvm/java-8-openjdk-amd64/bin/java"
+  :repl-options {:init-ns kubernetes-api.core-test}
   :target-path "target/%s"
   :aliases {"lint"     ["do" ["cljfmt" "check"] ["nsorg"] ["kibit"]]
             "lint-fix" ["do" ["cljfmt" "fix"] ["nsorg" "--replace"] ["kibit" "--replace"]]}
