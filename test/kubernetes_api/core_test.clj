@@ -40,8 +40,20 @@
                  :token token
                  ;;  :basic-auth basic-auth
                  })]
-    (k8s-api/explore client)
-    ;; (k8s/info client {:kind :Pod})
+    ;; (k8s-api/explore client :Pod)
+    #_(k8s-api/info client {:kind :Pod
+                          :action :list})
+    #_(k8s-api/invoke client {:kind    :ConfigMap
+                            :action  :create
+                            :request {:namespace "default"
+                                      :body      {:apiVersion "v1"
+                                                  :data       {"foo" "bar"}}}})
+    
+    (k8s-api/invoke client {:kind    :Pod
+                            :action  :list
+                            :request {:namespace "default"
+                                      :watch true}})
+
     )
   token
   ;; chuck
