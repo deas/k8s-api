@@ -1,4 +1,5 @@
-(ns kubernetes-api.misc)
+(ns kubernetes-api.misc
+  (:require [kubernetes-api.interceptors.watch :as w]))
 
 (defn find-first [pred coll]
   (first (filter pred coll)))
@@ -30,3 +31,43 @@
          (throw (IllegalArgumentException.
                  "assoc-some expects even number of arguments after map/vector, found odd number")))
        ret))))
+
+(def http-impl (atom {}))
+
+(defn http-request [] (:request-fn @http-impl))
+
+(defn http-default-interceptors [] (:interceptors @http-impl))
+
+(defn- swap-coerce-response
+  [interceptors]
+  (reduce #(conj %1
+                 (if (= (:name %2) :martian.interceptors/coerce-response)
+                   w/default-coerce-response
+                   %2))
+          []
+          interceptors))
+
+(defn ns-exists [ns]
+  (try (require (symbol ns))
+       ns
+       (catch Exception _)))
+
+(defn init! []
+  (let [impl (or
+              (ns-exists "martian.httpkit")
+              (ns-exists "martian.clj-http-lite")
+              (ns-exists "martian.clj-http"))
+        request-fn (case impl
+                     "martian.httpkit"
+                     (fn [& args] @(apply @(resolve 'org.httpkit.client/request) args))
+                     "martian.clj-http-lite"
+                     (fn [& args] (apply @(resolve 'clj-http.lite.client/request) args))
+                     "martian.clj-http"
+                     (fn [& args] (apply @(resolve 'clj-http.client/request) args)))]
+    (swap! http-impl assoc :interceptors 
+           ;; @(resolve (symbol (str impl "/default-interceptors")))
+           (swap-coerce-response @(resolve (symbol (str impl "/default-interceptors"))))
+           )
+    (swap! http-impl assoc :request-fn request-fn)))
+
+(init!)

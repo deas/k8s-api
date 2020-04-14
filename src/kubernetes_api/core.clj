@@ -7,7 +7,6 @@
             [kubernetes-api.misc :as misc]
             [kubernetes-api.swagger :as swagger]
             [martian.core :as martian]
-            [martian.httpkit :as martian-httpkit]
             martian.swagger))
 
 (defn client
@@ -37,7 +36,10 @@
   (let [interceptors (concat [(interceptors.raise/new opts)
                               (interceptors.auth/new opts)]
                              (:interceptors opts)
-                             martian-httpkit/default-interceptors)
+                             (misc/http-default-interceptors)
+                             ;; martian.clj-http-lite/default-interceptors
+                             ;; martian-httpkit/default-interceptors
+)
         k8s          (internals.client/pascal-case-routes
                       (martian/bootstrap-swagger host
                                                  (or (swagger/from-api host opts)
